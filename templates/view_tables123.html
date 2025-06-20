@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Saved Tables</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.25rem 1.5rem;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+        }
+        .bg-gradient-primary:hover {
+            background: linear-gradient(90deg, #0056b3, #007bff);
+        }
+    </style>
+<script>
+    function fetchTableData(folderId) {
+        fetch(`/get_table_data/${folderId}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableContainer = document.getElementById('tableContainer');
+                tableContainer.innerHTML = ''; // Clear previous table
+
+                // Extract unique days and timeslots from the data
+                const days = Array.from(new Set(data.map(item => item[0])));
+                const timeslots = Array.from(new Set(data.map(item => item[1])));
+
+                if (days.length && timeslots.length) {
+                    const table = document.createElement('table');
+
+                    // Create table head
+                    const thead = document.createElement('thead');
+                    const headRow = document.createElement('tr');
+                    headRow.appendChild(document.createElement('th')); // Empty top-left cell
+                    timeslots.forEach(timeslot => {
+                        const th = document.createElement('th');
+                        th.setAttribute('scope', 'col');
+                        th.textContent = timeslot;
+                        headRow.appendChild(th);
+                    });
+                    thead.appendChild(headRow);
+                    table.appendChild(thead);
+
+                    // Create table body
+                    const tbody = document.createElement('tbody');
+                    days.forEach(day => {
+                        const tr = document.createElement('tr');
+                        const th = document.createElement('th');
+                        th.setAttribute('scope', 'row');
+                        th.textContent = day;
+                        tr.appendChild(th);
+
+                        timeslots.forEach(timeslot => {
+                            const td = document.createElement('td');
+                            const cellData = data.find(item => item[0] === day && item[1] === timeslot);
+                            td.textContent = cellData ? cellData[2] : '';
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+
+                    tableContainer.appendChild(table);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+</script>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Saved Timetables</h1>
+        <ul>
+            {% for folder in folders %}
+            <li>
+                {{ folder.folder_name }}
+                <a href="#" class="btn bg-gradient-primary mb-0" onclick="fetchTableData({{ folder.id }}); return false;">View</a>
+            </li>
+            {% endfor %}
+        </ul>
+        <div id="tableContainer"></div>
+    </div>
+</body>
+</html>

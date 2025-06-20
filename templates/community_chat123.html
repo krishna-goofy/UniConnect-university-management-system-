@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Chat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .replies {
+            margin-left: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Community Chat</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+        <form action="{{ url_for('community_chat') }}" method="POST" class="mb-4">
+            <div class="form-group">
+                <label for="user_name">Your Name</label>
+                <input type="text" name="user_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="content">Message</label>
+                <textarea name="content" class="form-control" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Post Message</button>
+        </form>
+
+        <div class="chat-messages">
+            {% macro render_message(message) %}
+                <div class="message" style="margin-left: {{ message.depth * 20 }}px;">
+                    <strong>{{ message.user_name }}</strong>: {{ message.content }}
+                    <br>
+                    <small class="text-muted">{{ message.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+
+                    <!-- Toggle replies button -->
+                    {% if message.replies %}
+                        <button type="button" class="btn btn-link btn-sm" onclick="toggleReplies('{{ message.id }}')">
+                            Show Replies ({{ message.replies|length }})
+                        </button>
+                    {% endif %}
+                    
+                    <!-- Reply button -->
+                    <button type="button" class="btn btn-link btn-sm" onclick="toggleReplyForm('{{ message.id }}')">Reply</button>
+
+                    <!-- Reply form (hidden by default) -->
+                    <div id="reply-form-{{ message.id }}" class="hidden mt-2">
+                        <form action="{{ url_for('reply', message_id=message.id) }}" method="POST">
+                            <div class="form-group">
+                                <input type="text" name="user_name" placeholder="Your Name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <textarea name="content" placeholder="Your Reply" class="form-control" rows="2" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-secondary btn-sm">Submit Reply</button>
+                        </form>
+                    </div>
+
+                    <!-- Display replies recursively -->
+                    {% if message.replies %}
+                        <div id="replies-{{ message.id }}" class="replies hidden mt-3">
+                            {% for reply in message.replies %}
+                                {{ render_message(reply) }}  <!-- Recursive call -->
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endmacro %}
+
+            {% for message in chat_messages %}
+                {{ render_message(message) }}  <!-- Initial call for top-level messages -->
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Toggle visibility of replies
+        function toggleReplies(messageId) {
+            const repliesDiv = document.getElementById('replies-' + messageId);
+            const button = event.target;
+            
+            if (repliesDiv.classList.contains('hidden')) {
+                repliesDiv.classList.remove('hidden');
+                button.innerText = 'Hide Replies';
+            } else {
+                repliesDiv.classList.add('hidden');
+                button.innerText = 'Show Replies (' + repliesDiv.children.length + ')';
+            }
+        }
+
+        // Toggle visibility of the reply form
+        function toggleReplyForm(messageId) {
+            const replyFormDiv = document.getElementById('reply-form-' + messageId);
+            
+            if (replyFormDiv.classList.contains('hidden')) {
+                replyFormDiv.classList.remove('hidden');
+            } else {
+                replyFormDiv.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

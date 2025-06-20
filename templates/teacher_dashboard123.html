@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 15px;
+        }
+        /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 15px;
+        }
+
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1, h2 {
+    color: #2c3e50;
+}
+
+a {
+    text-decoration: none;
+    color: #2980b9;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Form styling */
+form {
+    margin-bottom: 30px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="date"], input[type="datetime-local"], textarea, select {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #3498db;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+
+
+td a {
+    color: #2980b9;
+}
+
+td a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    table, input[type="text"], input[type="date"], textarea, select {
+        width: 100%;
+    }
+}
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        /* Table styling */
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+    </style>
+    <script>
+    function fetchTableData(folderId) {
+        fetch(`/get_table_data/${folderId}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableContainer = document.getElementById('tableContainer');
+                tableContainer.innerHTML = ''; // Clear previous table
+
+                // Extract unique days and timeslots from the data
+                const days = Array.from(new Set(data.map(item => item[0])));
+                const timeslots = Array.from(new Set(data.map(item => item[1])));
+
+                if (days.length && timeslots.length) {
+                    const table = document.createElement('table');
+
+                    // Create table head
+                    const thead = document.createElement('thead');
+                    const headRow = document.createElement('tr');
+                    headRow.appendChild(document.createElement('th')); // Empty top-left cell
+                    timeslots.forEach(timeslot => {
+                        const th = document.createElement('th');
+                        th.setAttribute('scope', 'col');
+                        th.textContent = timeslot;
+                        headRow.appendChild(th);
+                    });
+                    thead.appendChild(headRow);
+                    table.appendChild(thead);
+
+                    // Create table body
+                    const tbody = document.createElement('tbody');
+                    days.forEach(day => {
+                        const tr = document.createElement('tr');
+                        const th = document.createElement('th');
+                        th.setAttribute('scope', 'row');
+                        th.textContent = day;
+                        tr.appendChild(th);
+
+                        timeslots.forEach(timeslot => {
+                            const td = document.createElement('td');
+                            const cellData = data.find(item => item[0] === day && item[1] === timeslot);
+                            td.textContent = cellData ? cellData[2] : '';
+                            if (cellData) {
+        td.onclick = () => showAttendanceForm(day, timeslot, cellData[2]);
+    }
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+
+                    tableContainer.appendChild(table);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+function showAttendanceForm(day, timeslot, batchId) {
+    // Show the modal form
+    const modal = document.getElementById('attendanceModal');
+    modal.querySelector('#selectedPeriod').textContent = `${day} - ${timeslot}`;
+
+    // Set the batch ID in a hidden input field
+    modal.querySelector('#batch-id').value = batchId;
+
+    modal.style.display = 'block';
+}
+
+
+function submitAttendance() {
+    const studentName = document.getElementById('student_name').value;
+    const comingInTime = document.getElementById('coming_in_time').value;
+    const goingOutTime = document.getElementById('going_out_time').value;
+    const selectedDate = document.getElementById('selectedDate').value;
+    const batchId = document.getElementById('batch-id').value;
+    const classId = document.getElementById('class_id').value;
+
+    // Check for empty values
+    if (!studentName || !comingInTime || !selectedDate || !batchId || !classId) {
+        alert('Please fill out all fields.');
+        return; // Prevent submission
+    }
+
+    const formData = new FormData();
+    formData.append('student_name', studentName);
+    formData.append('coming_in_time', comingInTime);
+    formData.append('going_out_time', goingOutTime);
+    formData.append('selectedDate', selectedDate);
+    formData.append('batch_id', batchId);
+    formData.append('class_id', classId);
+
+    fetch('/create_attendance', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Attendance submitted successfully!');
+        } else {
+            return response.json().then(errorData => {
+                console.error('Error:', errorData.message);
+                alert(`Error: ${errorData.message}`);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+
+// Move this outside of the submitAttendance function
+function closeModal() {
+    const modal = document.getElementById('attendanceModal');
+    modal.style.display = 'none';
+}
+
+
+    </script>
+
+</head>
+<body>
+    <h1>Teacher Dashboard</h1>
+
+
+    <form method="POST" action="{{ url_for('teacher_dashboard') }}">
+        <label for="batch_id">Select Batch:</label>
+<select id="batch-select" name="batch_id">
+    <option value="">Select Batch</option>
+</select>
+
+<script>
+    fetch('/get_batches')
+        .then(response => response.json())
+        .then(batches => {
+            const select = document.getElementById('batch-select');
+            batches.forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.id;
+                option.textContent = batch.name;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching batches:', error));
+</script>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+
+
+<h2>Attendance Data</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Period</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set grouped_attendance = {} %}
+        {% for attendance in attendance_data %}
+            {% set group_key = attendance.date ~ "-" ~ attendance.period %}
+            {% if group_key in grouped_attendance %}
+                {% set attendance_list = grouped_attendance[group_key] %}
+            {% else %}
+                {% set attendance_list = [] %}
+            {% endif %}
+            {% set _ = attendance_list.append(attendance) %}
+            {% set grouped_attendance = grouped_attendance.update({group_key: attendance_list}) %}
+        {% endfor %}
+
+        {% for group_key, attendance_list in grouped_attendance.items() %}
+            {% set first_attendance = attendance_list[0] %}
+            <!-- Grouped row -->
+            <tr onclick="toggleDetails('{{ group_key }}')" style="cursor:pointer; background-color: #f2f2f2;">
+                <td>{{ first_attendance.date }}</td>
+                <td>{{ first_attendance.period }}</td>
+                <td>Show Details</td>
+            </tr>
+            <tr class="details-row" data-group="{{ group_key }}" style="display: none;"> <!-- Initially hidden details row -->
+                <td colspan="3">
+                    <table style="width: 100%; border: 1px solid #ddd; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Batch Name</th>
+                                <th>Folder Name</th>
+                                <th>Period</th>
+                                <th>Student Name</th>
+                                <th>Total Duration (Hours)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attendance in attendance_list %}
+                                <tr>
+                                    <td>{{ attendance.date }}</td>
+                                    <td>{{ attendance.batch_name }}</td>
+                                    <td>{{ attendance.folder_name }}</td>
+                                    <td>{{ attendance.period }}</td>
+                                    <td>{{ attendance.student_name }}</td>
+                                    <td>{{ attendance.total_duration_hours }} hours</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+function toggleDetails(groupKey) {
+    const rows = document.querySelectorAll('.details-row[data-group="' + groupKey + '"]');
+    rows.forEach(row => {
+        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    });
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+    <form method="POST" action="{{ url_for('teacher_dashboard') }}">
+        <div class="form-group">
+            <label for="class_id">Select Class:</label>
+            <select id="class_id" name="class_id" class="form-control" onchange="fetchTableData(this.value)" required>
+                <option value="">Select Class</option>
+            </select>
+            <script>
+                fetch('/get_folder')
+                    .then(response => response.json())
+                    .then(folders => {
+                        const select = document.getElementById('class_id');
+                        folders.forEach(folder => {
+                            const option = document.createElement('option');
+                            option.value = folder.id;
+                            option.textContent = folder.name;
+                            select.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching folders:', error));
+            </script>
+        </div>
+    </form>
+
+    <h2>Attendance Timetable</h2>
+    <div id="tableContainer"></div>
+    
+
+    <!-- Attendance Modal -->
+<div id="attendanceModal" style="display:none;">
+    <div class="modal-content">
+        <span onclick="closeModal()" style="cursor:pointer;">&times; Close</span>
+        <h3>Attendance for <span id="selectedPeriod"></span></h3>
+        <input type="hidden" id="batch-id"> <!-- Hidden input for batch ID -->
+        <div class="form-group">
+            <label for="student_name">Student Name:</label>
+            <input type="text" id="student_name" class="form-control" placeholder="Enter Student Name" required>
+        </div>
+        <div class="form-group">
+            <label for="coming_in_time">Coming In Time:</label>
+            <input type="time" id="coming_in_time" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="going_out_time">Going Out Time:</label>
+            <input type="time" id="going_out_time" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="selectedDate">Date:</label>
+            <input type="date" id="selectedDate" class="form-control" required>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="submitAttendance()">Submit Attendance</button>
+    </div>
+</div>
+
+
+
+    <h2>Assignments</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assignment in assignment_data %}
+            <tr>
+                <td>{{ assignment.title }}</td>
+                <td>{{ assignment.description }}</td>
+                <td>{{ assignment.due_date }}</td>
+                <td>
+                    <a href="{{ url_for('view_submissions', assignment_id=assignment.id) }}">View Submissions</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('create_assignment') }}">Create Assignment</a>
+
+
+
+</body>
+</html>

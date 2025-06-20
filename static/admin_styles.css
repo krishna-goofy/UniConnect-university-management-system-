@@ -1,0 +1,32 @@
+
+
+h1 {
+    color: #f40386; /* Header color */
+    text-align: center; /* Center the header */
+    margin-bottom: 20px; /* Space below the header */
+}
+
+.form-group {
+    margin-bottom: 15px; /* Space between form groups */
+}
+
+.form-label {
+    display: block; /* Block display for labels */
+    font-weight: bold; /* Bold labels */
+    margin-bottom: 5px; /* Space below labels */
+}
+
+.form-control, .form-select {
+    width: 100%; /* Full width for inputs */
+    padding: 10px; /* Padding for inputs */
+    border: 1px solid #ddd; /* Light border */
+    border-radius: 5px; /* Rounded corners */
+    transition: border-color 0.3s; /* Smooth transition */
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007BFF; /* Change border color on focus */
+    outline: none; /* Remove default outline */
+}
+
+

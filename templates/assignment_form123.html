@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Assignment</title>
+    <style>
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, textarea, select {
+            margin-bottom: 10px;
+        }
+
+/* General styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1, h2 {
+    color: #2c3e50;
+}
+
+a {
+    text-decoration: none;
+    color: #2980b9;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Form styling */
+form {
+    margin-bottom: 30px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="date"], input[type="datetime-local"], textarea, select {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #3498db;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #2980b9;
+    color: white;
+}
+
+td a {
+    color: #2980b9;
+}
+
+td a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    table, input[type="text"], input[type="date"], textarea, select {
+        width: 100%;
+    }
+}
+
+
+    </style>
+</head>
+<body>
+    <h1>Create a New Assignment</h1>
+
+    <form method="POST" action="{{ url_for('create_assignment') }}">
+        <label for="title">Assignment Title</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="description">Description</label>
+        <textarea id="description" name="description" required></textarea>
+
+        <label for="due_date">Due Date</label>
+        <input type="date" id="due_date" name="due_date" required>
+
+        <label for="batch_id">Batch</label>
+        <select id="batch_id" name="batch_id">
+            {% for batch in batches %}
+            <option value="{{ batch.id }}">{{ batch.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Create Assignment</button>
+    </form>
+
+    <a href="{{ url_for('teacher_dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

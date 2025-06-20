@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editable Timetable Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 20px;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            margin-right: 10px;
+        }
+        .form-group select, .form-group input {
+            margin-right: 10px;
+        }
+        .btn {
+            padding: 0.25rem 1.5rem;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            color: white;
+            background-color: #007bff;
+            cursor: pointer;
+        }
+        .btn-danger {
+            background-color: #dc3545; /* Red for danger buttons */
+        }
+    </style>
+<script>
+    function addTimeslot() {
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+        if (startTime && endTime) {
+            const timeslot = `${startTime}-${endTime}`;
+            const timeslotList = document.getElementById('timeslotList');
+            const listItem = document.createElement('li');
+            listItem.textContent = timeslot;
+            const space = document.createTextNode(' ');
+            listItem.appendChild(space);
+            listItem.appendChild(createRemoveButton(listItem));
+            timeslotList.appendChild(listItem);
+            updateTable();
+        } else {
+            alert('Please select both start and end times');
+        }
+    }
+
+    function createRemoveButton(listItem) {
+        const removeButton = document.createElement('a');
+        removeButton.textContent = 'Remove';
+        removeButton.classList.add('btn', 'bg-gradient-primary', 'mb-0');
+        removeButton.style.cursor = 'pointer'; // Make it clear it's clickable
+        removeButton.style.padding = '0.25rem 1.5rem'; // Apply the padding styling
+        removeButton.onclick = function() {
+            listItem.remove();
+            updateTable();
+        };
+        return removeButton;
+    }
+
+    function updateTable() {
+        const timeslotList = document.getElementById('timeslotList');
+        const days = document.getElementById('days').value.split(',').map(day => day.trim());
+        const timeslots = Array.from(timeslotList.children).map(item => item.textContent.replace('Remove', '').trim());
+        generateTable(days, timeslots);
+    }
+
+    function generateTable(days, timeslots) {
+        const tableContainer = document.getElementById('tableContainer');
+        tableContainer.innerHTML = ''; // Clear previous table
+        
+        if (days.length && timeslots.length) {
+            const table = document.createElement('table');
+            table.classList.add('table', 'draggable'); // Add classes to the table
+            table.setAttribute('draggable', 'true'); // Set draggable attribute
+
+            // Create table head
+            const thead = document.createElement('thead');
+            const headRow = document.createElement('tr');
+            headRow.appendChild(document.createElement('th')); // Empty top-left cell
+            timeslots.forEach(timeslot => {
+                const th = document.createElement('th');
+                th.setAttribute('scope', 'col');
+                th.textContent = timeslot;
+                headRow.appendChild(th);
+            });
+            thead.appendChild(headRow);
+            table.appendChild(thead);
+
+            // Create table body
+            const tbody = document.createElement('tbody');
+            days.forEach(day => {
+                const tr = document.createElement('tr');
+                const th = document.createElement('th');
+                th.setAttribute('scope', 'row');
+                th.textContent = day;
+                tr.appendChild(th);
+
+                timeslots.forEach(() => {
+                    const td = document.createElement('td');
+                    const select = document.createElement('select');
+                    select.classList.add('batch-select');
+                    select.innerHTML = '<option value="">Select a batch</option>'; // Default option
+                    // Add options dynamically
+                    fetchBatches().then(batches => {
+                        batches.forEach(batch => {
+                            const option = document.createElement('option');
+                            option.value = batch.id;
+                            option.textContent = batch.name;
+                            select.appendChild(option);
+                        });
+                    });
+                    td.appendChild(select);
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+
+            tableContainer.appendChild(table);
+        }
+    }
+
+    function fetchBatches() {
+        return fetch('/get_batches')
+            .then(response => response.json())
+            .catch(error => console.error('Error fetching batches:', error));
+    }
+
+ function saveFolder() {
+    const folderName = document.getElementById('folderName').value;
+    const days = document.getElementById('days').value.split(',').map(day => day.trim());
+    const timeslots = Array.from(document.getElementById('timeslotList').children).map(item => item.textContent.replace('Remove', '').trim());
+    const tableData = {};
+    const rows = document.querySelectorAll('#tableContainer table tbody tr');
+
+    rows.forEach(row => {
+        const day = row.querySelector('th').textContent;
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell, index) => {
+            const select = cell.querySelector('select');
+            const selectedBatch = select ? select.value : ''; // Handle selected batch
+            const timeslot = timeslots[index];
+            const key = `${day}_${timeslot}`;
+            tableData[key] = selectedBatch || cell.textContent.trim();
+        });
+    });
+
+    fetch('/save_folder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                folderName: folderName,
+                days: days,
+                timeslots: timeslots,
+                tableData: tableData
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('addTimeslotButton').addEventListener('click', addTimeslot);
+        document.getElementById('days').addEventListener('input', updateTable);
+        document.getElementById('savefolder').addEventListener('click', saveFolder);
+    });
+</script>
+</head>
+<body>
+    <div class="container">
+        <h1>Editable Timetable Generator</h1>
+        <div class="form-group">
+            <label for="startTime">Start Time:</label>
+            <input type="time" id="startTime">
+            <label for="endTime">End Time:</label>
+            <input type="time" id="endTime">
+            <a id="addTimeslotButton" class="btn">Add Timeslot</a>
+        </div>
+        <ul id="timeslotList"></ul>
+        <div class="form-group">
+            <label for="days">Days (comma separated):</label>
+            <input type="text" id="days" name="days" value="Monday,Tuesday,Wednesday,Thursday,Friday">
+        </div>
+        <div id="tableContainer"></div>
+        <div class="form-group">
+            <a href="{{ url_for('create_batch') }}" class="btn">Create New Batch</a>
+            <a href="{{ url_for('view_batches') }}" class="btn">View Batches</a>
+        </div>
+    </div>
+</body>
+</html>

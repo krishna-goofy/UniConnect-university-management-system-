@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        label, select, input, button {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mark Attendance</h1>
+        
+        <form id="attendanceForm" onsubmit="submitAttendanceForm(event)">
+            <label for="class_id">Class:</label>
+            <select id="class_id" name="class_id" required>
+                <!-- Options will be populated dynamically -->
+                {% for folder in folders %}
+                <option value="{{ folder.id }}">{{ folder.folder_name }}</option>
+                {% endfor %}
+            </select>
+            
+            <label for="student_name">Student Name:</label>
+            <input type="text" id="student_name" name="student_name" required>
+            
+            <button type="submit">Mark Attendance</button>
+        </form>
+    </div>
+
+    <script>
+        function submitAttendanceForm(event) {
+            event.preventDefault();  // Prevent default form submission
+            
+            const form = document.getElementById('attendanceForm');
+            const formData = new FormData(form);
+            
+            // Collect form data for the alert message
+            const classId = formData.get('class_id');
+            const studentName = formData.get('student_name');
+            
+            // Show alert with form data
+            alert(`Class ID: ${classId}\nStudent Name: ${studentName}`);
+            
+            // Convert formData to URLSearchParams for the fetch request
+            const urlSearchParams = new URLSearchParams(formData);
+            
+            // Send form data to the server
+            fetch('/attendance', {
+                method: 'POST',
+                body: urlSearchParams
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the message from the server
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>

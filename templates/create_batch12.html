@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Batch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 20px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            margin-right: 10px;
+        }
+        .form-group input {
+            margin-right: 10px;
+        }
+        .btn {
+            padding: 0.25rem 1.5rem;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            color: white;
+            background-color: #007bff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create New Batch</h1>
+        <form method="POST" action="{{ url_for('create_batch') }}">
+            <div class="form-group">
+                <label for="batch_name">Batch Name:</label>
+                <input type="text" id="batch_name" name="batch_name" required>
+            </div>
+            <div class="form-group">
+                <label for="student_names">Student Names (comma separated):</label>
+                <input type="text" id="student_names" name="student_names">
+            </div>
+            <button type="submit" class="btn">Create Batch</button>
+        </form>
+    </div>
+</body>
+</html>

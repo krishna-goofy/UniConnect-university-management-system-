@@ -1,0 +1,32 @@
+{% if depth < 5 %}
+    {% for reply in message.replies %}
+        <div class="card mt-2">
+            <div class="card-body">
+                <strong>{{ reply.user_name }}</strong> 
+                <small class="text-muted">{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                <p>{{ reply.content }}</p>
+
+                <!-- Toggle Replies Button -->
+                <span class="reply-toggle" onclick="toggleReplies({{ reply.id }})">Show Replies</span>
+
+                <!-- Form to reply to this reply -->
+                <form action="{{ url_for('reply', message_id=reply.id) }}" method="POST" class="mt-2">
+                    <div class="form-group">
+                        <label for="user_name_{{ reply.id }}">Your Name</label>
+                        <input type="text" name="user_name" id="user_name_{{ reply.id }}" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="content_{{ reply.id }}">Reply</label>
+                        <textarea name="content" id="content_{{ reply.id }}" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">Reply</button>
+                </form>
+
+                <!-- Recursively include replies with updated depth -->
+                <div id="replies-{{ reply.id }}" class="reply-container">
+                    {% include 'replies.html' ignore missing %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}

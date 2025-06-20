@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>{% block title %}College Study Material{% endblock %}</title>
+</head>
+<body>
+
+<nav class="nav" style="position: relative; display: flex; align-items: center; height: 130px;">
+    <!-- Left aligned image -->
+    <div style="position: absolute; left: 10px;">
+        <img src="{{ url_for('static', filename='images/Untitled_design.jpg') }}" alt="logo" style="width: 120px; border-radius: 5px;">
+    </div>
+
+    <!-- Centered navigation list -->
+    <div style="margin: 0 auto;">
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; justify-content: center;">
+            <li style="margin: 0 20px;"><a href="{{ url_for('home') }}">Home</a></li>
+            <li style="margin: 0 20px;"><a href="{{ url_for('admin.admin_portal') }}">Admin Portal</a></li>
+            <li style="margin: 0 20px;"><a href="{{ url_for('user.user_portal') }}">User Portal</a></li>
+        </ul>
+    </div>
+
+    <div style="position: absolute; right: 10px;">
+        <img src="{{ url_for('static', filename='images/uni_logo.png') }}" alt="logo" style="width: 120px; border-radius: 5px;">
+    </div>
+
+</nav>
+
+
+
+
+
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+<footer>
+    <p>© 2024 Study Resource Hub</p>
+</footer>
+</body>
+</html>

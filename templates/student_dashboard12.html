@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .info {
+            margin-bottom: 20px;
+        }
+        .info strong {
+            color: #333;
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .retractable-section h2 {
+            cursor: pointer;
+            background-color: #f2f2f2;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .retractable-section .content {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body>
+
+<div class="container">
+    <h1>Student Dashboard</h1>
+
+    <form action="{{ url_for('student_dashboard') }}" method="GET">
+        <label for="student_name">Enter Student Name:</label>
+        <input type="text" id="student_name" name="student_name" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div class="assignments-section">
+        <h2>Assignments</h2>
+        <ul>
+            {% for assignment in assignments %}
+                <li>
+                    <strong>{{ assignment.title }}</strong> (Due: {{ assignment.due_date }})
+                    <p>{{ assignment.description }}</p>
+
+                    <form method="POST" action="{{ url_for('submit_assignment') }}">
+                        <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                        <input type="text" name="submission_link" placeholder="Enter submission link">
+                        <input type="hidden" name="student_name" value="{{ student_name }}">
+                        <button type="submit">Submit</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if error %}
+        <div class="error">
+            <p style="color: red;">{{ error }}</p>
+        </div>
+    {% endif %}
+
+    <!-- Chart Section -->
+    <div class="chart-container">
+        <h2>Attendance Chart</h2>
+        <canvas id="attendanceChart"></canvas>
+    </div>
+
+    <!-- Attendance Data Table under Chart -->
+<div class="table-container">
+    <h2>Attendance Data</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Class ID</th>
+            <th>Batch</th>
+            <th>Period</th>
+            <th>Total Duration</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, group in attendance_groups.items() %}
+        <tr>
+            <td>{{ group.date }}</td>
+            <td>{{ group.class_id }}</td>
+            <td>{{ group.batch }}</td>
+            <td>{{ group.period }}</td>
+            <td>{{ group.total_duration }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</div>
+
+
+<div class="table-container">
+    <h2>Total Duration for Each Batch</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Batch</th>
+                <th>Total Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for batch, total_duration in batch_durations.items() %}
+                <tr>
+                    <td>{{ batch }}</td>
+                    <td>{{ total_duration }}</td> <!-- Display the correct total duration -->
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+</div>
+
+<canvas id="attendanceChart"></canvas>
+
+<script>
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    const attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                label: 'Attendance Count',
+                data: [{{ attendance_present_count }}, {{ attendance_absent_count }}],
+                backgroundColor: ['#4caf50', '#f44336'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
